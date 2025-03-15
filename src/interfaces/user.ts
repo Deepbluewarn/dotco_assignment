@@ -9,3 +9,5 @@ export interface IUser {
     contact: string;
     created_at: string | Date;
 }
+
+export type IUserSafe = Omit<IUser, 'password'>;
