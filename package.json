@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.758.0",
+    "@aws-sdk/s3-request-presigner": "^3.758.0",
     "@mantine/core": "^7.17.1",
     "@mantine/hooks": "^7.17.1",
     "bcrypt": "^5.1.1",
