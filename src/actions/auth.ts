@@ -61,7 +61,7 @@ export async function login(data: LoginFormData) {
     const cookieStore = await cookies()
     
     try {
-        const users = await executeQuery<IUser>(
+        const users = await executeQuery<IUser[]>(
             'SELECT * FROM users WHERE user_id = ?',
             [data.user_id]
         );
