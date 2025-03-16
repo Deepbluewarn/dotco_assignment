@@ -23,6 +23,7 @@ export default function RequestDetailsAdmin({ requestId } : { requestId: number 
             const res = await createQuoteRequest(requestId, selectedSuppliers);
     
             alert(res.message);
+            location.reload();
         } catch(err) {
             alert(err)
         }

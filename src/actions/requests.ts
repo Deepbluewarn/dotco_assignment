@@ -5,6 +5,7 @@ import { getUserInfo } from "./user"
 import { IQuote, IQuoteRequest, IRequest, IRequestDetails, IRequestFile, IRequestWithClient, RequestStatus } from "@/interfaces/request";
 import { uploadFileToS3 } from "@/utils/s3";
 import { ResultSetHeader } from "mysql2";
+import { REQUEST_STATUSES } from "@/utils/request";
 
 export async function createRequest(data: FormData) {
     try {
@@ -211,34 +212,35 @@ export async function getRequestDetail(requestId: number): Promise<IRequestDetai
 export async function updateRequestStatus(requestId: number, newStatus: RequestStatus) {
     try {
         const user = await getUserInfo(false);
+        let status = [...REQUEST_STATUSES];
 
         if (!user) {
             throw new Error('회원 정보를 찾을 수 없습니다.');
         }
 
-        // 상태 변경 권한 확인
-        if (user.role !== 'DOTCO_ADMIN') {
-            // 공급사에게만 제한적으로 허용
-            if (user.role === 'SUPPLIER') {
-                // 공급사는 '발주 확정됨'과 '진행 중' 상태로만 변경 가능
-                if (newStatus !== 'ORDER_CONFIRMED' && newStatus !== 'IN_PROGRESS') {
-                    throw new Error('상태 변경 권한이 없습니다.');
-                }
+        if (user.role === 'CLIENT') {
+            throw new Error('상태 변경 권한이 없습니다.');
+        }
 
-                // 해당 요청에 대한 견적이 선정되었는지 확인
-                const quoteRequests = await executeQuery(
-                    `SELECT * FROM quote_requests qr
-                     JOIN requests r ON qr.request_id = r.id
-                     WHERE qr.request_id = ? AND qr.supplier_id = ? AND r.selected_quotes_id IS NOT NULL`,
-                    [requestId, user.id]
-                );
+        if (user.role === 'SUPPLIER') {
+            // 해당 요청에 대한 견적이 선정되었는지 확인
+            // 공급사는 선정된 요청에 한해 발주 확정 및 진행 중으로만 변경 가능.
+            const quoteRequests = await executeQuery(
+                `SELECT * FROM quote_requests qr
+                 JOIN requests r ON qr.request_id = r.id
+                 WHERE qr.request_id = ? AND qr.supplier_id = ? AND r.selected_quotes_id IS NOT NULL`,
+                [requestId, user.id]
+            );
 
-                if ((quoteRequests as any[]).length === 0) {
-                    throw new Error('이 요청에 대한 상태 변경 권한이 없습니다.');
-                }
-            } else {
+            if ((quoteRequests as any[]).length === 0) {
                 throw new Error('상태 변경 권한이 없습니다.');
             }
+
+            status = ['ORDER_CONFIRMED', 'IN_PROGRESS'];
+        }
+
+        if (status.indexOf(newStatus) === -1) {
+            throw new Error('상태 변경 권한이 없습니다.');
         }
 
         // 상태 업데이트
@@ -259,9 +261,6 @@ export async function updateRequestStatus(requestId: number, newStatus: RequestS
  * SQL 트랜잭션과 서브쿼리 활용 버전
  */
 export async function createQuoteRequest(requestId: number, supplierIds: number[]) {
-    console.log('createQuoteRequest requestId: ', requestId);
-    console.log('createQuoteRequest supplierIds: ', supplierIds);
-
     try {
         const user = await getUserInfo(false);
 
@@ -274,19 +273,7 @@ export async function createQuoteRequest(requestId: number, supplierIds: number[
             throw new Error('견적 요청 생성 권한이 없습니다.');
         }
         
-        // Use the transaction helper
         return await withTransaction(async (connection) => {
-            // 1. 요청이 존재하고 견적 요청 가능한 상태인지 확인
-            const requests = await executeWithConnection<IRequest[]>(
-                connection,
-                `SELECT * FROM requests WHERE id = ? AND status = 'APPROVED'`,
-                [requestId]
-            );
-
-            if (requests.length === 0) {
-                throw new Error('견적을 요청할 수 없는 상태이거나 요청이 존재하지 않습니다.');
-            }
-            
             // 2. 유효한 공급사 ID만 필터링
             const validSuppliersResult = await executeWithConnection<{supplier_id: number}[]>(
                 connection,
