@@ -1,31 +1,68 @@
-'use client'
-
 import { IQuoteRequest } from "@/interfaces/request"
-import { Table, Title } from "@mantine/core"
+import { Button, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Title } from "@mantine/core"
+import Link from "next/link";
+
+function getQuoteActionLink(quoteRequest: IQuoteRequest) {
+    if (quoteRequest.has_quote) {
+        return (
+            <Link target='_blank' href={`/request/quote/${quoteRequest.id}`}>
+                <Button 
+                    component="a" 
+                    size="xs" 
+                    variant="light" 
+                    color="blue"
+                >
+                    견적서 확인
+                </Button>
+            </Link>
+        );
+    } else {
+        return (
+            <Link href={`/request/quote/${quoteRequest.id}/register`}>
+                <Button 
+                    component="a" 
+                    size="xs" 
+                    variant="light" 
+                    color="green"
+                >
+                    견적서 등록
+                </Button>
+            </Link>
+        );
+    }
+}
 
 export default function QuoteRequestList({ quoteRequestList }: { quoteRequestList: IQuoteRequest[] }) {
     const rows = quoteRequestList.map(qr => (
-        <Table.Tr key={qr.id}>
-            <Table.Td>{qr.request_id}</Table.Td>
-            <Table.Td>{qr.supplier_name}</Table.Td>
-            <Table.Td>{new Date(qr.created_at).toDateString()}</Table.Td>
-            <Table.Td>견적서 확인</Table.Td>
-        </Table.Tr>
+        <TableTr key={qr.id}>
+            <TableTd>{qr.id}</TableTd>
+            <TableTd>{qr.request_id}</TableTd>
+            <TableTd>{qr.supplier_name}</TableTd>
+            <TableTd>{qr.status}</TableTd>
+            <TableTd>{qr.title}</TableTd>
+            <TableTd>{qr.description}</TableTd>
+            <TableTd>{new Date(qr.created_at).toDateString()}</TableTd>
+            <TableTd>{getQuoteActionLink(qr)}</TableTd>
+        </TableTr>
     ))
 
     return (
         <>
             <Title order={4}>견적 요청 목록</Title>
             <Table>
-                <Table.Thead>
-                    <Table.Tr>
-                        <Table.Th>요청 ID</Table.Th>
-                        <Table.Th>공급사</Table.Th>
-                        <Table.Th>생성일</Table.Th>
-                        <Table.Th></Table.Th>
-                    </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>{rows}</Table.Tbody>
+                <TableThead>
+                    <TableTr>
+                        <TableTh>ID</TableTh>
+                        <TableTh>요청 ID</TableTh>
+                        <TableTh>공급사</TableTh>
+                        <TableTh>상태</TableTh>
+                        <TableTh>제목</TableTh>
+                        <TableTh>설명</TableTh>
+                        <TableTh>생성일</TableTh>
+                        <TableTh>견적서</TableTh>
+                    </TableTr>
+                </TableThead>
+                <TableTbody>{rows}</TableTbody>
             </Table>
         </>
     )

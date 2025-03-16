@@ -1,42 +1,23 @@
-import { getRequestList } from "@/actions/requests";
-import { Table, TableCaption, TableTbody, TableTd, TableTh, TableThead, TableTr, Text, Title } from "@mantine/core";
-import Link from "next/link";
+import { getQuoteRequests } from "@/actions/requests";
+import { getUserInfo } from "@/actions/user";
+import QuoteRequestList from "@/components/RequestDetails/QuoteRequestList";
+import { Text } from '@mantine/core';
 
 export default async function RequestList() {
-    const requestList = await getRequestList();
+    const userInfo = await getUserInfo();
 
-    const rows = requestList.map((r) => (
-        <TableTr key={r.id}>
-            <TableTd>{r.id}</TableTd>
-            <TableTd>{r.selected_quotes_id}</TableTd>
-            <TableTd>{r.status}</TableTd>
-            <TableTd>{r.title}</TableTd>
-            <TableTd>{r.description}</TableTd>
-            <TableTd>{new Date(r.created_at).toDateString()}</TableTd>
-            <TableTd><Link href={`/request/details/${r.id}`}>상세</Link></TableTd>
-        </TableTr>
-    ));
+    if (!userInfo) {
+        return <Text>회원 정보를 찾을 수 없습니다.</Text>
+    }
+    const userRole = userInfo.role;
 
-    return (
-        <>
-            <Title>요청 목록</Title>
-            <Text>요청 목록을 확인할 수 있습니다.</Text>
+    if (userRole === 'SUPPLIER') {
+        // 회사로 들어온 발주 요청 목록을 조회한다.
+        const list = await getQuoteRequests();
+        return <QuoteRequestList quoteRequestList={list}/>
+    } else {
+        return <RequestList />
+    }
 
-            <Table stickyHeader stickyHeaderOffset={60}>
-                <TableThead>
-                    <TableTr>
-                        <TableTh>ID</TableTh>
-                        <TableTh>공급사</TableTh>
-                        <TableTh>상태</TableTh>
-                        <TableTh>제목</TableTh>
-                        <TableTh>설명</TableTh>
-                        <TableTh>생성일</TableTh>
-                        <TableTh></TableTh>
-                    </TableTr>
-                </TableThead>
-                <TableTbody>{rows}</TableTbody>
-                <TableCaption>Scroll page to see sticky thead</TableCaption>
-            </Table>
-        </>
-    )
+    
 }

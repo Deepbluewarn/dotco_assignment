@@ -81,13 +81,10 @@ export async function getRequestList() {
             return requests;
         }
 
-        // 2. 파트너사(DOTCO_ADMIN)인 경우 - 비즈니스 관계가 있는 발주사의 요청만 조회
+        // 2. 파트너사(DOTCO_ADMIN)인 경우 - 요청 전체 조회
         else if (user.role === 'DOTCO_ADMIN') {
             const requests = await executeQuery<IRequest[]>(
-                `SELECT r.*, u.company_name as client_name
-                 FROM requests r
-                 JOIN users u ON r.client_id = u.id
-                 ORDER BY r.created_at DESC`
+                `SELECT * FROM requests ORDER BY r.created_at DESC`
             );
             return requests;
         }
@@ -114,9 +111,16 @@ export async function getQuoteRequests() {
         }
 
         const quoteRequests = await executeQuery<IQuoteRequest[]>(
-            `SELECT qr.*, u.company_name as supplier_name
+            `SELECT 
+                qr.id, 
+                qr.request_id, 
+                qr.supplier_id,
+                u.company_name as supplier_name, 
+                r.status, r.title, r.description, r.created_at,
+                (SELECT COUNT(*) FROM quotes q WHERE q.quote_request_id = qr.id) > 0 as has_quote
              FROM quote_requests qr
              JOIN users u ON qr.supplier_id = u.id
+             JOIN requests r ON r.id = qr.request_id
              WHERE qr.supplier_id = ?
              ORDER BY qr.created_at DESC`,
             [user.id]
@@ -126,6 +130,53 @@ export async function getQuoteRequests() {
     } catch (error) {
         console.error('견적 요청 조회 중 오류:', error);
         throw new Error('견적 요청을 조회하는데 실패했습니다.');
+    }
+}
+
+/**
+ * 특정 견적 요청 정보 조회 (공급사가 견적 작성을 위해 필요)
+ */
+export async function getQuoteRequestWithDetails(quoteRequestId: number) {
+    try {
+        const user = await getUserInfo(false);
+
+        if (!user) {
+            throw new Error('회원 정보를 찾을 수 없습니다.');
+        }
+
+        // 공급사만 견적 요청 정보 조회 가능
+        if (user.role !== 'SUPPLIER') {
+            throw new Error('견적 요청 정보를 조회할 권한이 없습니다.');
+        }
+
+        console.log('getQuoteRequestWithDetails user: ', user)
+
+        const quoteRequests = await executeQuery<IQuoteRequest[]>(
+            `SELECT 
+                qr.id, 
+                qr.request_id, 
+                qr.supplier_id,
+                r.title, 
+                r.description,
+                r.status,
+                u.company_name as supplier_name,
+                qr.created_at,
+                (SELECT COUNT(*) FROM quotes q WHERE q.quote_request_id = qr.id) > 0 as has_quote
+             FROM quote_requests qr
+             JOIN requests r ON qr.request_id = r.id
+             JOIN users u ON r.client_id = u.id
+             WHERE qr.id = ? AND qr.supplier_id = ?`,
+            [quoteRequestId, user.id]
+        );
+
+        if (quoteRequests.length === 0) {
+            return null;
+        }
+
+        return quoteRequests[0];
+    } catch (error) {
+        console.error('견적 요청 정보 조회 중 오류:', error);
+        throw new Error('견적 요청 정보를 조회하는데 실패했습니다: ' + (error as Error).message);
     }
 }
 
@@ -179,10 +230,17 @@ export async function getRequestDetail(requestId: number): Promise<IRequestDetai
 
         // 견적 요청 정보 조회 (공급사 정보 포함)
         const quoteRequests = await executeQuery<IQuoteRequest[]>(
-            `SELECT qr.*, u.company_name as supplier_name
-             FROM quote_requests qr
-             JOIN users u ON qr.supplier_id = u.id
-             WHERE qr.request_id = ?`,
+            `SELECT 
+                qr.id, 
+                qr.request_id, 
+                qr.supplier_id, 
+                qr.created_at
+                u.company_name as supplier_name, 
+                r.status, r.title, r.description, 
+            FROM quote_requests qr
+            JOIN users u ON qr.supplier_id = u.id
+            JOIN requests r ON qr.request_id = r.id
+            WHERE qr.request_id = ?`
             [requestId]
         );
 

@@ -37,12 +37,15 @@ export interface IRequestFile {
 
 // For quote requests query result
 export interface IQuoteRequest {
-    id: number;
-    request_id: number;
+    id: number; // 견적 요청 ID
+    request_id: number; // 요청 ID
     supplier_id: number;
-    supplier_name: string; // From JOIN with users table
+    supplier_name: string; // 공급사 이름
+    status: RequestStatus;
+    title: string;
+    description: string;
     created_at: string;
-    updated_at: string;
+    has_quote?: boolean;
 }
 
 // For quotes query result
