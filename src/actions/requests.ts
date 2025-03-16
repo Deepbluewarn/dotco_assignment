@@ -84,7 +84,7 @@ export async function getRequestList() {
         // 2. 파트너사(DOTCO_ADMIN)인 경우 - 요청 전체 조회
         else if (user.role === 'DOTCO_ADMIN') {
             const requests = await executeQuery<IRequest[]>(
-                `SELECT * FROM requests ORDER BY r.created_at DESC`
+                `SELECT * FROM requests ORDER BY created_at DESC`
             );
             return requests;
         }
@@ -234,13 +234,13 @@ export async function getRequestDetail(requestId: number): Promise<IRequestDetai
                 qr.id, 
                 qr.request_id, 
                 qr.supplier_id, 
-                qr.created_at
+                qr.created_at,
                 u.company_name as supplier_name, 
-                r.status, r.title, r.description, 
+                r.status, r.title, r.description
             FROM quote_requests qr
             JOIN users u ON qr.supplier_id = u.id
             JOIN requests r ON qr.request_id = r.id
-            WHERE qr.request_id = ?`
+            WHERE qr.request_id = ?`,
             [requestId]
         );
 
