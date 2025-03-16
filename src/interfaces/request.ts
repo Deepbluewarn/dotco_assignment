@@ -12,7 +12,7 @@ export type RequestStatus =
 export interface IRequest {
     id: number;
     client_id: number;
-    selected_quotes_id: string | null;
+    selected_quotes_id: number | null;
     status: RequestStatus;
     title: string;
     description: string | null;
@@ -41,6 +41,8 @@ export interface IQuoteRequest {
     request_id: number; // 요청 ID
     supplier_id: number;
     supplier_name: string; // 공급사 이름
+    client_id: string;
+    client_name: string;
     status: RequestStatus;
     title: string;
     description: string;
@@ -50,15 +52,17 @@ export interface IQuoteRequest {
 
 // For quotes query result
 export interface IQuote {
-    id: number;
+    quotes_id: number;
     quote_request_id: number;
-    supplier_id: number;
-    supplier_name: string; // From JOIN with users table
-    price: number;
-    description: string;
-    delivery_date: string;
+    estimated_cost: number;
+    production_time: number;
+    notes: string;
     created_at: string;
     updated_at: string;
+    supplier_id: number;
+    supplier_name: string;
+    client_id: number;
+    client_name: string;
 }
 
 // Final combined result

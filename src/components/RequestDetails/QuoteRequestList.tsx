@@ -5,29 +5,27 @@ import Link from "next/link";
 function getQuoteActionLink(quoteRequest: IQuoteRequest) {
     if (quoteRequest.has_quote) {
         return (
-            <Link target='_blank' href={`/request/quote/${quoteRequest.id}`}>
-                <Button 
-                    component="a" 
-                    size="xs" 
-                    variant="light" 
-                    color="blue"
-                >
-                    견적서 확인
-                </Button>
-            </Link>
+            <Button
+                component={Link}
+                href={`/request/quote/${quoteRequest.id}`}
+                size="xs"
+                variant="light"
+                color="blue"
+            >
+                견적서 확인
+            </Button>
         );
     } else {
         return (
-            <Link href={`/request/quote/${quoteRequest.id}/register`}>
-                <Button 
-                    component="a" 
-                    size="xs" 
-                    variant="light" 
-                    color="green"
-                >
-                    견적서 등록
-                </Button>
-            </Link>
+            <Button
+                component={Link}
+                size="xs"
+                href={`/request/quote/${quoteRequest.id}/register`}
+                variant="light"
+                color="green"
+            >
+                견적서 등록
+            </Button>
         );
     }
 }
@@ -38,6 +36,7 @@ export default function QuoteRequestList({ quoteRequestList }: { quoteRequestLis
             <TableTd>{qr.id}</TableTd>
             <TableTd>{qr.request_id}</TableTd>
             <TableTd>{qr.supplier_name}</TableTd>
+            <TableTd>{qr.client_name}</TableTd>
             <TableTd>{qr.status}</TableTd>
             <TableTd>{qr.title}</TableTd>
             <TableTd>{qr.description}</TableTd>
@@ -55,6 +54,7 @@ export default function QuoteRequestList({ quoteRequestList }: { quoteRequestLis
                         <TableTh>ID</TableTh>
                         <TableTh>요청 ID</TableTh>
                         <TableTh>공급사</TableTh>
+                        <TableTh>발주사</TableTh>
                         <TableTh>상태</TableTh>
                         <TableTh>제목</TableTh>
                         <TableTh>설명</TableTh>

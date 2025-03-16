@@ -5,6 +5,7 @@ import { IRole, IUserSafe } from "@/interfaces/user";
 import { fetchWithType } from "@/utils/common";
 import { Button, Checkbox, Flex, Modal, Table, Text } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const SUPPLIER_ROLE_NAME: IRole = 'SUPPLIER';
@@ -17,13 +18,15 @@ export default function RequestDetailsAdmin({ requestId } : { requestId: number 
     const [opened, { open, close }] = useDisclosure(false);
     const [suppliers, setSuppliers] = useState<IUserSafe[] | null>([]);
     const [selectedSuppliers, setSelectedSuppliers] = useState<number[]>([]);
-
+    const router = useRouter();
+    
     const request = async () => {
         try {
             const res = await createQuoteRequest(requestId, selectedSuppliers);
     
             alert(res.message);
             location.reload();
+            router.refresh();
         } catch(err) {
             alert(err)
         }

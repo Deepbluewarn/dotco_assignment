@@ -115,12 +115,15 @@ export async function getQuoteRequests() {
                 qr.id, 
                 qr.request_id, 
                 qr.supplier_id,
-                u.company_name as supplier_name, 
+                supplier.company_name as supplier_name, 
                 r.status, r.title, r.description, r.created_at,
+                r.client_id,
+                client.company_name as client_name,
                 (SELECT COUNT(*) FROM quotes q WHERE q.quote_request_id = qr.id) > 0 as has_quote
              FROM quote_requests qr
-             JOIN users u ON qr.supplier_id = u.id
+             JOIN users supplier ON qr.supplier_id = supplier.id
              JOIN requests r ON r.id = qr.request_id
+             JOIN users client ON r.client_id = client.id
              WHERE qr.supplier_id = ?
              ORDER BY qr.created_at DESC`,
             [user.id]
@@ -144,10 +147,12 @@ export async function getQuoteRequestWithDetails(quoteRequestId: number) {
             throw new Error('회원 정보를 찾을 수 없습니다.');
         }
 
-        // 공급사만 견적 요청 정보 조회 가능
-        if (user.role !== 'SUPPLIER') {
+        // 발주사는 견적 요청 정보를 조회할 수 없음.
+        if (user.role === 'CLIENT') {
             throw new Error('견적 요청 정보를 조회할 권한이 없습니다.');
         }
+
+        console.log('getQuoteRequestWithDetails quoteRequestId: ', quoteRequestId)
 
         console.log('getQuoteRequestWithDetails user: ', user)
 
@@ -160,13 +165,16 @@ export async function getQuoteRequestWithDetails(quoteRequestId: number) {
                 r.description,
                 r.status,
                 u.company_name as supplier_name,
+                r.client_id,
+                client.company_name as client_name,
                 qr.created_at,
                 (SELECT COUNT(*) FROM quotes q WHERE q.quote_request_id = qr.id) > 0 as has_quote
              FROM quote_requests qr
              JOIN requests r ON qr.request_id = r.id
              JOIN users u ON r.client_id = u.id
-             WHERE qr.id = ? AND qr.supplier_id = ?`,
-            [quoteRequestId, user.id]
+             JOIN users client ON r.client_id = client.id
+             WHERE qr.id = ?`,
+            [quoteRequestId]
         );
 
         if (quoteRequests.length === 0) {
@@ -211,9 +219,22 @@ export async function getRequestDetail(requestId: number): Promise<IRequestDetai
 
         if (user.role === 'SUPPLIER') {
             // 공급사는 자신에게 견적 요청된 요청만 볼 수 있음
-            const quoteRequests = await executeQuery(
-                `SELECT * FROM quote_requests 
-                 WHERE request_id = ? AND supplier_id = ?`,
+            const quoteRequests = await executeQuery<IQuoteRequest[]>(
+                `SELECT 
+                    qr.id, 
+                    qr.request_id, 
+                    qr.supplier_id, 
+                    u.company_name as supplier_name,
+                    r.client_id,
+                    client.company_name as client_name,
+                    r.status, r.title, r.description,
+                    qr.created_at,
+                    (SELECT COUNT(*) FROM quotes q WHERE q.quote_request_id = qr.id) > 0 as has_quote
+                FROM quote_requests qr
+                JOIN users u ON qr.supplier_id = u.id
+                JOIN requests r ON qr.request_id = r.id
+                JOIN users client ON r.client_id = client.id
+                WHERE qr.request_id = ? AND qr.supplier_id = ?`,
                 [requestId, user.id]
             );
 
@@ -234,22 +255,31 @@ export async function getRequestDetail(requestId: number): Promise<IRequestDetai
                 qr.id, 
                 qr.request_id, 
                 qr.supplier_id, 
+                u.company_name as supplier_name,
+                r.client_id,
+                client.company_name as client_name,
+                r.status, r.title, r.description,
                 qr.created_at,
-                u.company_name as supplier_name, 
-                r.status, r.title, r.description
+                (SELECT COUNT(*) FROM quotes q WHERE q.quote_request_id = qr.id) > 0 as has_quote
             FROM quote_requests qr
             JOIN users u ON qr.supplier_id = u.id
             JOIN requests r ON qr.request_id = r.id
+            JOIN users client ON r.client_id = client.id
             WHERE qr.request_id = ?`,
             [requestId]
         );
 
         // 견적서 정보 조회
         const quotes = await executeQuery<IQuote[]>(
-            `SELECT q.*, qr.supplier_id, u.company_name as supplier_name
+            `SELECT 
+                q.*, 
+                qr.supplier_id, 
+                u.company_name as supplier_name
              FROM quotes q
              JOIN quote_requests qr ON q.quote_request_id = qr.id
+             JOIN request r ON q.quote_request_id = r.id
              JOIN users u ON qr.supplier_id = u.id
+             JOIN users client ON r.client_id = client.id
              WHERE qr.request_id = ?`,
             [requestId]
         );

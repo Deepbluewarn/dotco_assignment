@@ -2,6 +2,8 @@ import { getQuote } from '@/actions/quote';
 import { getUserInfo } from '@/actions/user';
 import { Paper, Title, Text, Group, Badge, Divider, Stack, Card } from '@mantine/core';
 import { getQuoteRequestWithDetails } from '@/actions/requests';
+import SelectQuoteButton from '@/components/Quote/SelectQuoteButton';
+import Quote from '@/components/Quote/Quote';
 
 export default async function ViewQuote(
     { params }:
@@ -26,51 +28,11 @@ export default async function ViewQuote(
         <div className="container mx-auto py-8">
             <Title order={2} mb="lg">견적서 정보</Title>
             
-            <Card shadow="sm" withBorder p="lg" mb="xl">
-                <Title order={3} mb="md">기본 정보</Title>
-                
-                <Group align="flex-start" grow mb="xl">
-                    <Stack gap="xs">
-                        <Group>
-                            <Text fw={500}>견적 금액:</Text>
-                            <Text>{Number(quote.estimated_cost).toLocaleString()}원</Text>
-                        </Group>
-                        
-                        <Group>
-                            <Text fw={500}>생산 소요 시간:</Text>
-                            <Text>{quote.production_time}일</Text>
-                        </Group>
-                    </Stack>
-                    
-                    <Stack gap="xs">
-                        <Group>
-                            <Text fw={500}>견적 제출일:</Text>
-                            <Text>{new Date(quote.created_at).toLocaleDateString()}</Text>
-                        </Group>
-                        
-                        <Group>
-                            <Text fw={500}>공급사:</Text>
-                            <Text>{quote.supplier_name}</Text>
-                        </Group>
-                    </Stack>
-                </Group>
-                
-                {quote.notes && (
-                    <>
-                        <Divider my="md" />
-                        <Group mb="xs">
-                            <Text fw={500}>견적 상세 내용</Text>
-                        </Group>
-                        <Paper p="md" withBorder>
-                            <Text>{quote.notes}</Text>
-                        </Paper>
-                    </>
-                )}
-            </Card>
+            <Quote quote={quote}/>
             
             {quoteRequest && (
                 <Card shadow="sm" withBorder p="lg">
-                    <Title order={3} mb="md">원본 요청 정보</Title>
+                    <Title order={3} mb="md">발주사 요청 정보</Title>
                     
                     <Group mb="md">
                         <Badge color={getStatusColor(quoteRequest.status)}>{quoteRequest.status}</Badge>
@@ -93,6 +55,12 @@ export default async function ViewQuote(
                             </Paper>
                         </>
                     )}
+
+                    <SelectQuoteButton
+                        quoteId={id}
+                        requestId={Number(quoteRequest?.request_id)}
+                        userRole={user.role}
+                    />
                 </Card>
             )}
         </div>
