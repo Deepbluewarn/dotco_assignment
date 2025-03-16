@@ -1,9 +1,10 @@
 import { getQuoteRequests } from "@/actions/requests";
 import { getUserInfo } from "@/actions/user";
 import QuoteRequestList from "@/components/RequestDetails/QuoteRequestList";
+import RequestList from "@/components/RequestDetails/RequestList";
 import { Text } from '@mantine/core';
 
-export default async function RequestList() {
+export default async function Page() {
     const userInfo = await getUserInfo();
 
     if (!userInfo) {
