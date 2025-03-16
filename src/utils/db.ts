@@ -1,4 +1,4 @@
-import mysql from 'mysql2/promise';
+import mysql, { PoolConnection } from 'mysql2/promise';
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -9,33 +9,36 @@ const pool = mysql.createPool({
     connectionLimit: 10,
 });
 
-export async function executeQuery<T = any>(sql: string, params: any[] = []) {
+// 커넥션 해제를 보장하는 withConnection 헬퍼
+export async function withConnection<T>(callback: (connection: PoolConnection) => Promise<T>): Promise<T> {
+    const connection = await pool.getConnection();
     try {
-        const queryResult = await pool.execute(sql, params);
-        return queryResult[0] as T;
-    } catch (error) {
-        console.error('Database error:', error);
-        throw error;
+        return await callback(connection);
+    } finally {
+        connection.release(); // 항상 연결 해제
     }
 }
 
-// New function to handle transactions
-export async function withTransaction<T>(
-    callback: (connection: mysql.Connection) => Promise<T>
-): Promise<T> {
-    const connection = await pool.getConnection();
+export async function executeQuery<T>(query: string, params?: any[]): Promise<T> {
+    return withConnection(async (connection) => {
+        const [rows] = await connection.execute(query, params || []);
+        return rows as T;
+    });
+}
 
-    try {
+// New function to handle transactions
+export async function withTransaction<T>(callback: (connection: PoolConnection) => Promise<T>): Promise<T> {
+    return withConnection(async (connection) => {
         await connection.beginTransaction();
-        const result = await callback(connection);
-        await connection.commit();
-        return result;
-    } catch (error) {
-        await connection.rollback();
-        throw error;
-    } finally {
-        connection.release();
-    }
+        try {
+            const result = await callback(connection);
+            await connection.commit();
+            return result;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        }
+    });
 }
 
 // Helper to execute query with a specific connection
