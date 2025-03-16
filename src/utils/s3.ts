@@ -25,11 +25,8 @@ export async function uploadFileToS3(
 ): Promise<string> {
   try {
     // Generate a unique filename to prevent collisions
-    const fileExtension = getFileExtension(file.name || 'file');
-    const uniqueFileName = `${uuidv4()}${fileExtension ? `.${fileExtension}` : ''}`;
-    
     // Create the S3 key (path)
-    const key = `${prefix}/${uniqueFileName}`;
+    const key = `${prefix}/${uuidv4()}/${file.name}`;
     
     // Get file buffer
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -40,7 +37,8 @@ export async function uploadFileToS3(
       Key: key,
       Body: buffer,
       ContentType: file.type,
-      ACL: 'private' // This makes the file private
+      ACL: 'private', // This makes the file private
+      ContentDisposition: 'attachment',
     });
     
     await s3Client.send(command);
