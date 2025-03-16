@@ -3,11 +3,11 @@
 import { IRequestDetails } from "@/interfaces/request";
 import { IUserSafe } from "@/interfaces/user";
 import { getStatusMetadata, REQUEST_STATUS_META } from "@/utils/request";
-import { Box, Flex, Select, Text } from '@mantine/core';
-import Link from "next/link";
+import { Box, Select, Text } from '@mantine/core';
 import { useState } from "react";
 import RequestDetailsAdmin from "./Admin";
 import QuoteRequestList from "./QuoteRequestList";
+import Attachments from "../Attachments";
 
 export default function RequestDetails(
     { requestDetails, userInfo }: 
@@ -37,14 +37,7 @@ export default function RequestDetails(
             {/* 공통 영역 */}
             <Box>
                 <Text>첨부파일</Text>
-                <Flex gap={8}>
-                    {
-                        requestDetails.files.map(file => {
-                            return <Link key={file.file_id} href={`/api/file/${file.file_id}`}>{file.filename}</Link>
-                        })
-                    }
-                </Flex>
-
+                <Attachments files={requestDetails.files} />
             </Box>
 
             <Text>공급사: {requestDetails.selected_quotes_id ?? '미정'}</Text>
