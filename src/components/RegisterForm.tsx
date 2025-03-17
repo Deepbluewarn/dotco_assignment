@@ -171,11 +171,12 @@ export default function RegisterForm() {
                         id="contact"
                         name="contact"
                         type="tel"
-                        label="연락처 (선택)"
+                        label="연락처"
                         placeholder="010-0000-0000"
                         value={formData.contact}
                         onChange={handleChange}
                         leftSection={<IconPhone size={16} />}
+                        required
                     />
                 </Stack>
 
