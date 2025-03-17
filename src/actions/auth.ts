@@ -24,7 +24,7 @@ export type LoginFormData = {
 export async function registerUser(data: RegisterFormData) {
     try {
         // 아이디 중복 확인
-        const users = await executeQuery(
+        const users = await executeQuery<IUser[]>(
             'SELECT * FROM users WHERE user_id = ?',
             [data.user_id]
         );
