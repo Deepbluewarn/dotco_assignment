@@ -19,6 +19,4 @@ export default async function Page() {
     } else {
         return <RequestList />
     }
-
-    
 }

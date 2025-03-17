@@ -36,3 +36,20 @@ export function getStatusMetadata(status: RequestStatus): IRequestStatusMetadata
     const metadata = REQUEST_STATUS_META.find(item => item.value === status);
     return metadata ?? null;
 }
+
+// 상태에 따른 배지 색상 지정
+export function getStatusColor(status: string): string {
+    const colors: Record<string, string> = {
+        'REGISTERED': 'gray',
+        'REVIEWING': 'blue',
+        'APPROVED': 'teal',
+        'QUOTE_REQUESTED': 'violet',
+        'QUOTE_COLLECTING': 'indigo',
+        'QUOTE_CLOSED': 'orange',
+        'ORDER_CONFIRMED': 'green',
+        'IN_PROGRESS': 'cyan',
+        'COMPLETED': 'lime'
+    };
+    
+    return colors[status] || 'gray';
+}

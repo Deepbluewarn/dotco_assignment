@@ -72,33 +72,51 @@ export async function getRequestList() {
             return [];
         }
 
-        // 1. 발주사(CLIENT)인 경우 - 자신의 요청만 조회
+        // 기본 쿼리 (모든 필드 포함)
+        let query = `
+            SELECT 
+                r.id, 
+                r.status, 
+                r.title, 
+                r.description, 
+                r.created_at,
+                r.client_id,
+                client.company_name as client_name,
+                r.selected_quotes_id,
+                (
+                    SELECT supplier_id 
+                    FROM quote_requests qr
+                    JOIN quotes q ON q.quote_request_id = qr.id
+                    WHERE q.quotes_id = r.selected_quotes_id
+                    LIMIT 1
+                ) as selected_supplier_id,
+                (
+                    SELECT u.company_name 
+                    FROM quote_requests qr
+                    JOIN quotes q ON q.quote_request_id = qr.id
+                    JOIN users u ON qr.supplier_id = u.id
+                    WHERE q.quotes_id = r.selected_quotes_id
+                    LIMIT 1
+                ) as selected_supplier_name
+            FROM requests r
+            JOIN users client ON r.client_id = client.id
+        `;
+
+        let params = [];
+
+        // 권한에 따른 필터링
         if (user.role === 'CLIENT') {
-            const requests = await executeQuery<IRequest[]>(
-                `SELECT * FROM requests WHERE client_id = ? ORDER BY created_at DESC`,
-                [user.id]
-            );
-            return requests;
+            query += ' WHERE r.client_id = ?';
+            params.push(user.id);
         }
+        
+        // 정렬
+        query += ' ORDER BY r.created_at DESC';
 
-        // 2. 파트너사(DOTCO_ADMIN)인 경우 - 요청 전체 조회
-        else if (user.role === 'DOTCO_ADMIN') {
-            const requests = await executeQuery<IRequest[]>(
-                `SELECT * FROM requests ORDER BY created_at DESC`
-            );
-            return requests;
-        }
-
-        // 3. 공급사(SUPPLIER)의 경우 - 직접 요청 목록은 조회 불가능
-        else if (user.role === 'SUPPLIER') {
-            // 공급사는 요청 목록을 직접 볼 수 없음
-            return [];
-        }
-
-        return [];
+        return await executeQuery<IRequest[]>(query, params);
     } catch (error) {
-        console.error('요청 조회 중 오류:', error);
-        throw new Error('요청을 조회하는데 실패했습니다.');
+        console.error('요청 목록 조회 중 오류:', error);
+        throw new Error('요청 목록을 조회하는데 실패했습니다.');
     }
 }
 
@@ -277,7 +295,7 @@ export async function getRequestDetail(requestId: number): Promise<IRequestDetai
                 u.company_name as supplier_name
              FROM quotes q
              JOIN quote_requests qr ON q.quote_request_id = qr.id
-             JOIN request r ON q.quote_request_id = r.id
+             JOIN requests r ON q.quote_request_id = r.id
              JOIN users u ON qr.supplier_id = u.id
              JOIN users client ON r.client_id = client.id
              WHERE qr.request_id = ?`,

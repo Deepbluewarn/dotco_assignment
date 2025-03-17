@@ -27,7 +27,7 @@ export default function Quote({ quote } : { quote: IQuote }) {
                 <Stack gap="xs">
                     <Group>
                         <Text fw={500}>견적 제출일:</Text>
-                        <Text>{new Date(quote.created_at).toLocaleDateString()}</Text>
+                        <Text>{new Date(quote.created_at).toDateString()}</Text>
                     </Group>
 
                     <Group>

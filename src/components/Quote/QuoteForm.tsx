@@ -24,21 +24,20 @@ export default function QuoteForm({ quoteRequestId }: QuoteFormProps) {
             
             if (result.success) {
                 setSuccess(true);
+                setError('');
             } else {
                 setError(result.message || '견적 생성 중 오류가 발생했습니다.');
             }
         } catch (error: any) {
             setError(error.message || '견적 생성 중 오류가 발생했습니다.');
         } finally {
-            setError(null);
+
         }
     }
 
     return (
         <Card shadow="sm" padding="lg" radius="md" withBorder>
-            {
-                error
-            }
+            <Text c={'red'} fw={'bold'}>{error}</Text>
             {success ? (
                 <Alert title="견적 제출 완료" color="green" variant="filled">
                     견적이 성공적으로 제출되었습니다.

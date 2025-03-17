@@ -1,6 +1,7 @@
 import { IQuoteRequest } from "@/interfaces/request"
 import { Button, Table, TableTbody, TableTd, TableTh, TableThead, TableTr, Title } from "@mantine/core"
 import Link from "next/link";
+import StatusBadge from "../StatusBadge";
 
 function getQuoteActionLink(quoteRequest: IQuoteRequest) {
     if (quoteRequest.has_quote) {
@@ -30,14 +31,33 @@ function getQuoteActionLink(quoteRequest: IQuoteRequest) {
     }
 }
 
+function RequestDetailLink({ request_id } : { request_id: number }) {
+    return (
+        <Button
+            component={Link}
+            size="xs"
+            href={`/request/details/${request_id}`}
+            target="_blank"
+            variant="light"
+            color="green"
+        >
+            요청 상세
+        </Button>
+    )
+}
+
 export default function QuoteRequestList({ quoteRequestList }: { quoteRequestList: IQuoteRequest[] }) {
     const rows = quoteRequestList.map(qr => (
         <TableTr key={qr.id}>
             <TableTd>{qr.id}</TableTd>
-            <TableTd>{qr.request_id}</TableTd>
+            <TableTd>
+                <RequestDetailLink request_id={qr.request_id}/>
+            </TableTd>
             <TableTd>{qr.supplier_name}</TableTd>
             <TableTd>{qr.client_name}</TableTd>
-            <TableTd>{qr.status}</TableTd>
+            <TableTd>
+                <StatusBadge status={qr.status}/>
+            </TableTd>
             <TableTd>{qr.title}</TableTd>
             <TableTd>{qr.description}</TableTd>
             <TableTd>{new Date(qr.created_at).toDateString()}</TableTd>

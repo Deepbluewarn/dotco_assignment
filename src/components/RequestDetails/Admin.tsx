@@ -14,7 +14,7 @@ interface ISupplierList {
     data: IUserSafe[];
 }
 
-export default function RequestDetailsAdmin({ requestId } : { requestId: number }) {
+export default function SupplierQuoteRequestManager({ requestId } : { requestId: number }) {
     const [opened, { open, close }] = useDisclosure(false);
     const [suppliers, setSuppliers] = useState<IUserSafe[] | null>([]);
     const [selectedSuppliers, setSelectedSuppliers] = useState<number[]>([]);
@@ -25,7 +25,6 @@ export default function RequestDetailsAdmin({ requestId } : { requestId: number 
             const res = await createQuoteRequest(requestId, selectedSuppliers);
     
             alert(res.message);
-            location.reload();
             router.refresh();
         } catch(err) {
             alert(err)
@@ -35,7 +34,6 @@ export default function RequestDetailsAdmin({ requestId } : { requestId: number 
     useEffect(() => {
         const asyncFn = async () => {
             const res = await fetchWithType<ISupplierList>(`/api/users?role=${SUPPLIER_ROLE_NAME}`);
-            console.log(res.data);
             setSuppliers(res.data);
         }
 

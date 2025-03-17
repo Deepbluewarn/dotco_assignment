@@ -18,6 +18,9 @@ export interface IRequest {
     description: string | null;
     created_at: string;
     updated_at: string;
+    client_name: string;    // 발주사 이름 추가
+    selected_supplier_id?: number;   // 선택된 공급사 ID (있는 경우)
+    selected_supplier_name?: string; // 선택된 공급사 이름 (있는 경우)
 }
 
 export interface IRequestWithClient extends IRequest {

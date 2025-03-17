@@ -4,6 +4,7 @@ import { Paper, Title, Text, Group, Badge, Divider, Stack, Card } from '@mantine
 import { getQuoteRequestWithDetails } from '@/actions/requests';
 import SelectQuoteButton from '@/components/Quote/SelectQuoteButton';
 import Quote from '@/components/Quote/Quote';
+import StatusBadge from '@/components/StatusBadge';
 
 export default async function ViewQuote(
     { params }:
@@ -35,7 +36,7 @@ export default async function ViewQuote(
                     <Title order={3} mb="md">발주사 요청 정보</Title>
                     
                     <Group mb="md">
-                        <Badge color={getStatusColor(quoteRequest.status)}>{quoteRequest.status}</Badge>
+                        <StatusBadge status={quoteRequest.status}/>
                     </Group>
                     
                     <Stack gap="xs" mb="md">
@@ -45,41 +46,26 @@ export default async function ViewQuote(
                             <Text>요청일: {new Date(quoteRequest.created_at).toLocaleDateString()}</Text>
                         </Group>
                     </Stack>
-                    
-                    {quoteRequest.description && (
-                        <>
-                            <Divider my="md" />
-                            <Text fw={500} mb="xs">요청 설명</Text>
-                            <Paper p="md" withBorder>
-                                <Text>{quoteRequest.description}</Text>
-                            </Paper>
-                        </>
-                    )}
 
-                    <SelectQuoteButton
-                        quoteId={id}
-                        requestId={Number(quoteRequest?.request_id)}
-                        userRole={user.role}
-                    />
+                    <Stack>
+                        {quoteRequest.description && (
+                            <>
+                                <Divider my="md" />
+                                <Text fw={500} mb="xs">요청 설명</Text>
+                                <Paper p="md" withBorder>
+                                    <Text>{quoteRequest.description}</Text>
+                                </Paper>
+                            </>
+                        )}
+
+                        <SelectQuoteButton
+                            quoteId={id}
+                            requestId={Number(quoteRequest?.request_id)}
+                            userRole={user.role}
+                        />
+                    </Stack>
                 </Card>
             )}
         </div>
     );
-}
-
-// 상태에 따른 배지 색상 지정
-function getStatusColor(status: string): string {
-    const colors: Record<string, string> = {
-        'REGISTERED': 'gray',
-        'REVIEWING': 'blue',
-        'APPROVED': 'teal',
-        'QUOTE_REQUESTED': 'violet',
-        'QUOTE_COLLECTING': 'indigo',
-        'QUOTE_CLOSED': 'orange',
-        'ORDER_CONFIRMED': 'green',
-        'IN_PROGRESS': 'cyan',
-        'COMPLETED': 'lime'
-    };
-    
-    return colors[status] || 'gray';
 }

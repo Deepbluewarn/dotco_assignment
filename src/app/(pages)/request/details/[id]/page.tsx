@@ -20,13 +20,5 @@ export default async function Page({
         return <Text>회원 정보를 찾을 수 없습니다.</Text>
     }
 
-    return (
-        <>
-            <Title>요청 상세</Title>
-
-            <Text>{id}번 요청의 상세 내역입니다.</Text>
-
-            <RequestDetails requestDetails={details} userInfo={userInfo} />
-        </>
-    )
+    return <RequestDetails requestDetails={details} userInfo={userInfo} />;
 }
