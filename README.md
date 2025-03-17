@@ -32,7 +32,7 @@
  - `files`: 첨부파일 메타데이터 저장
     - S3 파일 참조를 위한 key 값이 저장 됨.
 
-[전체 ERD]('https://www.erdcloud.com/d/FMg8xZohqZZM7oBhK')
+[전체 ERD](https://www.erdcloud.com/d/FMg8xZohqZZM7oBhK)
 
 ### 상태 관리 흐름
 
