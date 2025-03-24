@@ -59,7 +59,7 @@ export async function uploadFileToS3(
  */
 export async function getSignedFileUrl(
   fileKey: string, 
-  expiresIn: number = 3600
+  expiresIn: number = 10
 ): Promise<string> {
   try {
     const command = new GetObjectCommand({
