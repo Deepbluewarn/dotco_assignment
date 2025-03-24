@@ -235,41 +235,7 @@ export async function getRequestDetail(requestId: number): Promise<IRequestDetai
             throw new Error('이 요청에 대한 접근 권한이 없습니다.');
         }
 
-        if (user.role === 'SUPPLIER') {
-            // 공급사는 자신에게 견적 요청된 요청만 볼 수 있음
-            const quoteRequests = await executeQuery<IQuoteRequest[]>(
-                `SELECT 
-                    qr.id, 
-                    qr.request_id, 
-                    qr.supplier_id, 
-                    u.company_name as supplier_name,
-                    r.client_id,
-                    client.company_name as client_name,
-                    r.status, r.title, r.description,
-                    qr.created_at,
-                    (SELECT COUNT(*) FROM quotes q WHERE q.quote_request_id = qr.id) > 0 as has_quote
-                FROM quote_requests qr
-                JOIN users u ON qr.supplier_id = u.id
-                JOIN requests r ON qr.request_id = r.id
-                JOIN users client ON r.client_id = client.id
-                WHERE qr.request_id = ? AND qr.supplier_id = ?`,
-                [requestId, user.id]
-            );
-
-            if (quoteRequests.length === 0) {
-                throw new Error('이 요청에 대한 접근 권한이 없습니다.');
-            }
-        }
-
-        // 첨부 파일 정보 조회
-        const files = await executeQuery<IRequestFile[]>(
-            `SELECT * FROM files WHERE request_id = ?`,
-            [requestId]
-        );
-
-        // 견적 요청 정보 조회 (공급사 정보 포함)
-        const quoteRequests = await executeQuery<IQuoteRequest[]>(
-            `SELECT 
+        let quoteRequestsQuery = `SELECT 
                 qr.id, 
                 qr.request_id, 
                 qr.supplier_id, 
@@ -283,7 +249,26 @@ export async function getRequestDetail(requestId: number): Promise<IRequestDetai
             JOIN users u ON qr.supplier_id = u.id
             JOIN requests r ON qr.request_id = r.id
             JOIN users client ON r.client_id = client.id
-            WHERE qr.request_id = ?`,
+            WHERE qr.request_id = ?`;
+        let params = [requestId];
+
+        if (user.role === 'SUPPLIER') {
+            quoteRequestsQuery += ' AND qr.supplier_id = ?';
+            params.push(user.id);
+        }
+
+        // 견적 요청 정보 조회 (공급사 정보 포함)
+        const quoteRequests = await executeQuery<IQuoteRequest[]>(
+            quoteRequestsQuery, params
+        );
+
+        if (quoteRequests.length === 0) {
+            throw new Error('요청 상세 정보를 찾을 수 없습니다. 권한이 없거나 정보가 존재하지 않습니다.');
+        }
+
+        // 첨부 파일 정보 조회
+        const files = await executeQuery<IRequestFile[]>(
+            `SELECT * FROM files WHERE request_id = ?`,
             [requestId]
         );
 
@@ -292,7 +277,9 @@ export async function getRequestDetail(requestId: number): Promise<IRequestDetai
             `SELECT 
                 q.*, 
                 qr.supplier_id, 
-                u.company_name as supplier_name
+                u.company_name as supplier_name,
+                client.id as client_id,
+                client.company_name as client_company_name
              FROM quotes q
              JOIN quote_requests qr ON q.quote_request_id = qr.id
              JOIN requests r ON q.quote_request_id = r.id

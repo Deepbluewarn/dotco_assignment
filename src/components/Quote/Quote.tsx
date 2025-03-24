@@ -39,7 +39,7 @@ export default function Quote({ quote } : { quote: IQuote }) {
                 <Stack gap="xs">
                     <Group>
                         <Text fw={500}>발주사: </Text>
-                        <Text>{quote.client_name}</Text>
+                        <Text>{quote.client_company_name}</Text>
                     </Group>
                 </Stack>
             </Group>

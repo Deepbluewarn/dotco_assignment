@@ -65,7 +65,7 @@ export interface IQuote {
     supplier_id: number;
     supplier_name: string;
     client_id: number;
-    client_name: string;
+    client_company_name: string;
 }
 
 // Final combined result
